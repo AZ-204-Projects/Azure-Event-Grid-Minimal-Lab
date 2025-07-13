@@ -159,7 +159,7 @@ Note: at this point you can build and run.  You have an Azure Function that can 
 2. **Configure Event Grid Topic & Subscription**
    - Create a custom Event Grid topic:
      ```sh
-     TOPIC_NAME="eventgrid-demo-topic"
+     TOPIC_NAME="topic-eventgrid-demo"
      az eventgrid topic create --name $TOPIC_NAME --resource-group $RG_NAME --location $LOCATION
      ```
    - Subscribe the Storage Queue to the topic:
