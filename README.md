@@ -136,6 +136,9 @@ az storage queue create --name $QUEUE_NAME --account-name $STORAGE_NAME
      cd EventGridFunctionProj
      func new --name EventPublisherFunction --template "HTTP trigger"
      ```
+Note: at this point you can build and run.  You have an Azure Function that can respond to a GET or POST and log and create a 200 OK response with a line of text.
+
+
    - Add packages for Event Grid publishing:
      ```sh
      dotnet add package Azure.Messaging.EventGrid
@@ -143,7 +146,7 @@ az storage queue create --name $QUEUE_NAME --account-name $STORAGE_NAME
 
    - Implement Function logic to POST incoming payloads as events to Event Grid (see `EventPublisherFunction.cs`).
 
-2. **Deploy Function to Azure**
+1. **Deploy Function to Azure**
    - Create a Function App:
      ```sh
      az functionapp create --resource-group $RG_NAME --consumption-plan-location $LOCATION --runtime dotnet --functions-version 4 --name <your-func-name> --storage-account $STORAGE_NAME
@@ -153,7 +156,7 @@ az storage queue create --name $QUEUE_NAME --account-name $STORAGE_NAME
      func azure functionapp publish <your-func-name>
      ```
 
-3. **Configure Event Grid Topic & Subscription**
+2. **Configure Event Grid Topic & Subscription**
    - Create a custom Event Grid topic:
      ```sh
      TOPIC_NAME="eventgrid-demo-topic"
