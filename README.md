@@ -107,12 +107,12 @@ This project provisions Azure resources and exercises Event Grid with a minimal,
 
 ## Resource Provisioning
 
-Use the CLI for resource creation. Replace variables as appropriate.
+Use the CLI for resource creation. Replace variables as appropriate.  Best practice: save as "setup-eventgrid.sh" and execute using git bash.
 
 ```sh
-RG_NAME="eventgrid-demo-rg"
-LOCATION="eastus"
-STORAGE_NAME="eventgriddemostorage$RANDOM"
+RG_NAME="az-2024-eventgrid-lab-rg"
+LOCATION="westus"
+STORAGE_NAME="eventgridlabstorage$RANDOM"
 QUEUE_NAME="eventgridqueue"
 
 # Create resource group
