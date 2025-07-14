@@ -146,7 +146,7 @@ az storage queue create --name $QUEUE_NAME --account-name $STORAGE_NAME
 
 ```sh name=init-function.sh
 #!/bin/bash
-func init EventGridFunctionProj --worker-runtime dotnet
+func init EventGridFunctionProj --worker-runtime dotnet --target-framework net8.0
 cd EventGridFunctionProj
 func new --name EventPublisherFunction --template "HTTP trigger"
 ```
