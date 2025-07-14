@@ -105,94 +105,119 @@ This project provisions Azure resources and exercises Event Grid with a minimal,
 
 ---
 
-## Resource Provisioning
+## Resource Provisioning (Best Practice: Modular Scripts and Sourcing Variables)
 
-Use the CLI for resource creation. Replace variables as appropriate.  Best practice: save as "setup-eventgrid.sh" and execute using git bash.
+Use modular `.sh` files for each step, sourcing a common `source.sh` file for variables. This approach ensures consistency, repeatability, and easy maintenance.
 
-```sh
-RG_NAME="az-2024-eventgrid-lab-rg"
-LOCATION="westus"
-STORAGE_NAME="eventgridlabstorage$RANDOM"
-QUEUE_NAME="eventgridqueue"
+### 1. Create a `source.sh` file for shared variables - modify variable contents as needed
 
-# Create resource group
+```sh name=source.sh
+# source.sh
+export RG_NAME="az-2024-eventgrid-lab-rg"
+export LOCATION="westus"
+export STORAGE_NAME="eventgridlabstorage<put something unique here like yyyymmddhh>"
+export QUEUE_NAME="eventgridqueue"
+export TOPIC_NAME="topic-eventgrid-demo"
+
+```
+
+### 2. Create a script to provision resources (`setup-eventgrid.sh`)
+
+```sh name=setup-eventgrid.sh
+#!/bin/bash
+source ./source.sh
+
 az group create --name $RG_NAME --location $LOCATION
 
-# Create storage account to act as an endpoint
 az storage account create --name $STORAGE_NAME --resource-group $RG_NAME --location $LOCATION --sku Standard_LRS
 
-# Create storage queue
 az storage queue create --name $QUEUE_NAME --account-name $STORAGE_NAME
+```
+
+### 3. Application Setup
+
+#### Scaffold a new Azure Function (.NET) with HTTP Trigger
+
+```sh name=init-function.sh
+#!/bin/bash
+func init EventGridFunctionProj --worker-runtime dotnet
+cd EventGridFunctionProj
+func new --name EventPublisherFunction --template "HTTP trigger"
+```
+_Note: At this point you can build and run locally._
+
+#### Add packages for Event Grid publishing
+
+```sh name=add-packages.sh
+dotnet add package Azure.Messaging.EventGrid
+```
+
+#### Implement Function logic to POST incoming payloads as events to Event Grid (see `EventPublisherFunction.cs`).
+
+---
+
+### 4. Configure Event Grid Topic & Subscription (before deploying Function)
+
+#### Create Event Grid topic and subscribe Storage Queue
+
+```sh name=setup-eventgrid-topic.sh
+#!/bin/bash
+source ./source.sh
+
+az eventgrid topic create --name $TOPIC_NAME --resource-group $RG_NAME --location $LOCATION
+
+az eventgrid event-subscription create \
+  --resource-group $RG_NAME \
+  --topic-name $TOPIC_NAME \
+  --name "demoSubscription" \
+  --endpoint-type storagequeue \
+  --endpoint "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RG_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_NAME/queueServices/default/queues/$QUEUE_NAME"
 ```
 
 ---
 
-## Application Setup
+### 5. Deploy Function to Azure
 
-1. **Create Azure Function (.NET) with HTTP Trigger**
-   - Scaffold a new HTTP-triggered Azure Function:
-     ```sh
-     func init EventGridFunctionProj --worker-runtime dotnet
-     cd EventGridFunctionProj
-     func new --name EventPublisherFunction --template "HTTP trigger"
-     ```
-Note: at this point you can build and run.  You have an Azure Function that can respond to a GET or POST and log and create a 200 OK response with a line of text.
+```sh name=deploy-function.sh
+#!/bin/bash
+source ./source.sh
 
+az functionapp create --resource-group $RG_NAME --consumption-plan-location $LOCATION --runtime dotnet --functions-version 4 --name <your-func-name> --storage-account $STORAGE_NAME
 
-   - Add packages for Event Grid publishing:
-     ```sh
-     dotnet add package Azure.Messaging.EventGrid
-     ```
-
-   - Implement Function logic to POST incoming payloads as events to Event Grid (see `EventPublisherFunction.cs`).
-
-1. **Configure Event Grid Topic & Subscription (before deploying Function)**
-   - Create a custom Event Grid topic:
-     ```sh
-     TOPIC_NAME="topic-eventgrid-demo"
-     az eventgrid topic create --name $TOPIC_NAME --resource-group $RG_NAME --location $LOCATION
-     ```
-   - Subscribe the Storage Queue to the topic:
-     ```sh
-     az eventgrid event-subscription create \
-       --resource-group $RG_NAME \
-       --topic-name $TOPIC_NAME \
-       --name "demoSubscription" \
-       --endpoint-type storagequeue \
-       --endpoint "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RG_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_NAME/queueServices/default/queues/$QUEUE_NAME"
-     ```
-
-2. **Deploy Function to Azure**
-   - Create a Function App:
-     ```sh
-     az functionapp create --resource-group $RG_NAME --consumption-plan-location $LOCATION --runtime dotnet --functions-version 4 --name <your-func-name> --storage-account $STORAGE_NAME
-     ```
-   - Deploy code:
-     ```sh
-     func azure functionapp publish <your-func-name>
-     ```
+func azure functionapp publish <your-func-name>
+```
 
 ---
 
-## Event Grid Exercise
-Note: these tests can be performed twice.  First after the subscription step above using the local endpoint and again after the deployment step above using the cloud endpoint,
+### 6. Event Grid Exercise (Test Locally and in Cloud)
 
-1. **Send a POST Request to the Azure Function**
-   ```sh
-   curl -X POST <function-endpoint-url> -H "Content-Type: application/json" -d '{"data":"sample"}'
-   ```
+**Note:** These tests can be performed twice:
+- First, after the subscription step above, using the local endpoint.
+- Again, after the deployment step above, using the cloud endpoint.
 
-2. **Function publishes event to Event Grid.**
+#### Send a POST Request to the Azure Function
 
-3. **Event Grid delivers event to the Storage Queue.**
+```sh
+curl -X POST <function-endpoint-url> -H "Content-Type: application/json" -d '{"data":"sample"}'
+```
 
-4. **Check the Storage Queue**
-   - Use Azure CLI or Storage Explorer to confirm message delivery:
-     ```sh
-     az storage message peek --queue-name $QUEUE_NAME --account-name $STORAGE_NAME
-     ```
+#### Function publishes event to Event Grid.
+
+#### Event Grid delivers event to the Storage Queue.
+
+#### Check the Storage Queue
+
+```sh
+az storage message peek --queue-name $QUEUE_NAME --account-name $STORAGE_NAME
+```
 
 ---
+
+**Summary:**  
+- Use modular `.sh` scripts for each step.
+- Use a common `source.sh` for variables.
+- Always `source` `source.sh` in each script for consistent variable access.
+- This pattern applies for both multi-line and one-liner scripts if variables or config are needed.---
 
 ## Enterprise Practices
 
