@@ -146,17 +146,7 @@ Note: at this point you can build and run.  You have an Azure Function that can 
 
    - Implement Function logic to POST incoming payloads as events to Event Grid (see `EventPublisherFunction.cs`).
 
-1. **Deploy Function to Azure**
-   - Create a Function App:
-     ```sh
-     az functionapp create --resource-group $RG_NAME --consumption-plan-location $LOCATION --runtime dotnet --functions-version 4 --name <your-func-name> --storage-account $STORAGE_NAME
-     ```
-   - Deploy code:
-     ```sh
-     func azure functionapp publish <your-func-name>
-     ```
-
-2. **Configure Event Grid Topic & Subscription**
+1. **Configure Event Grid Topic & Subscription (before deploying Function)**
    - Create a custom Event Grid topic:
      ```sh
      TOPIC_NAME="topic-eventgrid-demo"
@@ -172,9 +162,20 @@ Note: at this point you can build and run.  You have an Azure Function that can 
        --endpoint "/subscriptions/$SUBSCRIPTION_ID/resourceGroups/$RG_NAME/providers/Microsoft.Storage/storageAccounts/$STORAGE_NAME/queueServices/default/queues/$QUEUE_NAME"
      ```
 
+2. **Deploy Function to Azure**
+   - Create a Function App:
+     ```sh
+     az functionapp create --resource-group $RG_NAME --consumption-plan-location $LOCATION --runtime dotnet --functions-version 4 --name <your-func-name> --storage-account $STORAGE_NAME
+     ```
+   - Deploy code:
+     ```sh
+     func azure functionapp publish <your-func-name>
+     ```
+
 ---
 
 ## Event Grid Exercise
+Note: these tests can be performed twice.  First after the subscription step above using the local endpoint and again after the deployment step above using the cloud endpoint,
 
 1. **Send a POST Request to the Azure Function**
    ```sh
