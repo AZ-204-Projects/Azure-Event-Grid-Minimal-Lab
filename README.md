@@ -152,7 +152,59 @@ _Note: At this point you can build and run locally._
 dotnet add package Azure.Messaging.EventGrid
 ```
 
-#### Implement Function logic to POST incoming payloads as events to Event Grid (see `EventPublisherFunction.cs`).
+#### Implement Function logic (.NET) to POST incoming payloads to Azure Storage Queue
+
+Create `EventPublisherFunction.cs` in your Azure Function project:
+
+```csharp
+using System.IO;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Azure.Storage.Queues;
+
+public static class EventPublisherFunction
+{
+    [FunctionName("EventPublisherFunction")]
+    public static async Task<IActionResult> Run(
+        [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
+        ILogger log)
+    {
+        string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+
+        // Get connection string and queue name from environment variables
+        string queueConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
+        string queueName = Environment.GetEnvironmentVariable("QueueName"); // set this in local.settings.json
+
+        var queueClient = new QueueClient(queueConnectionString, queueName);
+        await queueClient.CreateIfNotExistsAsync();
+
+        // Enqueue message
+        await queueClient.SendMessageAsync(requestBody);
+
+        return new OkObjectResult($"Message sent to queue: {queueName}");
+    }
+}
+```
+
+Set up `local.settings.json` with your storage connection string and queue name:
+
+```json
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "<your_storage_connection_string>",
+    "QueueName": "eventgridqueue"
+  }
+}
+```
+
+---
+
+This function receives POST requests, reads the payload, and enqueues it to the Azure Storage Queue. Configure your resource provisioning and Event Grid subscription as described above to complete the workflow.
 
 ---
 
