@@ -150,6 +150,7 @@ _Note: At this point you can build and run locally._
 
 ```sh name=add-packages.sh
 dotnet add package Azure.Messaging.EventGrid
+dotnet add package Azure.Storage.Queues
 ```
 
 #### Implement Function logic (.NET) to POST incoming payloads to Azure Storage Queue
@@ -173,11 +174,17 @@ public static class EventPublisherFunction
         [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
         ILogger log)
     {
+        // optional logging
+        log.LogInformation("C# HTTP trigger function processing a request.");
+
         string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
 
         // Get connection string and queue name from environment variables
         string queueConnectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
         string queueName = Environment.GetEnvironmentVariable("QueueName"); // set this in local.settings.json
+
+       // optional logging
+        log.LogInformation($"queueName:{queueName}.");
 
         var queueClient = new QueueClient(queueConnectionString, queueName);
         await queueClient.CreateIfNotExistsAsync();
