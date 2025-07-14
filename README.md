@@ -121,7 +121,7 @@ export TOPIC_NAME="topic-eventgrid-demo"
 
 ```
 
-### 2. Create a script to provision resources (`setup-eventgrid.sh`)
+### 2. Create a script to provision resources (`1-setup-az-eventgrid.sh`)
 
 ```sh name=setup-eventgrid.sh
 #!/bin/bash
@@ -136,7 +136,7 @@ az storage queue create --name $QUEUE_NAME --account-name $STORAGE_NAME
 
 ### 3. Application Setup
 
-#### Scaffold a new Azure Function (.NET) with HTTP Trigger
+#### Create script to Scaffold a new Azure Function (.NET) with HTTP Trigger (2-setup-dotnet-http-trigger.sh) and run it.
 
 ```sh name=init-function.sh
 #!/bin/bash
@@ -146,7 +146,7 @@ func new --name EventPublisherFunction --template "HTTP trigger"
 ```
 _Note: At this point you can build and run locally._
 
-#### Add packages for Event Grid publishing
+#### Create script to Add packages for Event Grid publishing (3-add-libs-eventgrid-publishing) and run it.
 
 ```sh name=add-packages.sh
 dotnet add package Azure.Messaging.EventGrid
