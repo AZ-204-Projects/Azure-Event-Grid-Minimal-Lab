@@ -109,23 +109,29 @@ This project provisions Azure resources and exercises Event Grid with a minimal,
 
 Use modular `.sh` files for each step, sourcing a common `source.sh` file for variables. This approach ensures consistency, repeatability, and easy maintenance.
 
-### 1. Create a `source.sh` file for shared variables - modify variable contents as needed
+### 1. Create a `0-source.sh` file for shared variables - modify variable contents as needed
 
-```sh name=source.sh
-# source.sh
-export RG_NAME="az-2024-eventgrid-lab-rg"
+```sh name=0-source.sh
+# 0-source.sh
+export RG_NAME="az-204-eventgrid-lab-rg"
 export LOCATION="westus"
-export STORAGE_NAME="eventgridlabstorage<put something unique here like yyyymmddhh>"
+export STORAGE_NAME="eventgridlabstorage2025071408"
 export QUEUE_NAME="eventgridqueue"
 export TOPIC_NAME="topic-eventgrid-demo"
 
+echo $RG_NAME
+echo $LOCATION
+echo $STORAGE_NAME
+echo $QUEUE_NAME
+echo $TOPIC_NAME
+
 ```
 
-### 2. Create a script to provision resources (`1-setup-az-eventgrid.sh`)
+### 2. Create a script to provision resources (`1-setup-az-eventgrid.sh`) and run it.
 
 ```sh name=setup-eventgrid.sh
 #!/bin/bash
-source ./source.sh
+source ./0-source.sh
 
 az group create --name $RG_NAME --location $LOCATION
 
@@ -221,7 +227,7 @@ This function receives POST requests, reads the payload, and enqueues it to the 
 
 ```sh name=setup-eventgrid-topic.sh
 #!/bin/bash
-source ./source.sh
+source ./0-source.sh
 
 az eventgrid topic create --name $TOPIC_NAME --resource-group $RG_NAME --location $LOCATION
 
@@ -239,7 +245,7 @@ az eventgrid event-subscription create \
 
 ```sh name=deploy-function.sh
 #!/bin/bash
-source ./source.sh
+source ./0-source.sh
 
 az functionapp create --resource-group $RG_NAME --consumption-plan-location $LOCATION --runtime dotnet --functions-version 4 --name <your-func-name> --storage-account $STORAGE_NAME
 
