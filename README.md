@@ -243,13 +243,15 @@ az eventgrid event-subscription create \
 
 ### 5. Deploy Function to Azure
 
-```sh name=deploy-function.sh
+```sh name=5-az-deploy-function.sh
 #!/bin/bash
 source ./0-source.sh
 
-az functionapp create --resource-group $RG_NAME --consumption-plan-location $LOCATION --runtime dotnet --functions-version 4 --name <your-func-name> --storage-account $STORAGE_NAME
+cd EventGridFunctionProj
 
-func azure functionapp publish <your-func-name>
+az functionapp create --resource-group $RG_NAME --consumption-plan-location $LOCATION --runtime dotnet --functions-version 4 --name "EventGridFunctionProj" --storage-account $STORAGE_NAME
+
+func azure functionapp publish EventGridFunctionProj
 ```
 
 ---
